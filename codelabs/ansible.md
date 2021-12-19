@@ -2,7 +2,6 @@ summary: Getting Started with Ansible
 id: getting-started-ansible
 status: Published 
 authors: Ansible
-feedback link: https://fteychene.github.io/cloud-101-course/
 
 # Getting started with Ansible
 

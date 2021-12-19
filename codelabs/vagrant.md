@@ -2,7 +2,6 @@ summary: Getting Started with Vagrant
 id: getting-started-vagrant
 status: Published 
 authors: fteychene
-url: https://fteychene.github.io/cloud-101-course/
 
 
 # Getting started with Vagrant
