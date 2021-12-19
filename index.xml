@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cloud 101</title>
+    <link>https://fteychene.github.io/cloud-101-course/</link>
+    <description>Recent content on Cloud 101</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>fteychene 2021</copyright><atom:link href="https://fteychene.github.io/cloud-101-course/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

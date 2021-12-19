@@ -1,0 +1,588 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Getting Started with Kubernetes</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="getting-started-kubernetes"
+                  title="Getting Started with Kubernetes"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Setup" duration="0">
+        <p>In this hands-on we will work using <a href="https://k3s.io/" target="_blank">k3s</a>, it&#39;s a lightweight Kubernetes distribution easy to install.<br> We will not work with vanilla kubernetes as its installation could be challenging.</p>
+<p>Using k3s should not change your experience since we will stay at a beginer level and asics of this distribution work as a vanilla kubernetes.</p>
+<h2 is-upgraded>Setup a VM</h2>
+<p>We will use Vagrant to spawn a VM a work with k3s.</p>
+<pre><code language="language-ruby" class="language-ruby">Vagrant.configure(&#34;2&#34;) do |config|
+    config.vm.box = &#34;ubuntu/focal64&#34;
+    config.vm.hostname = &#34;kubemaster&#34;
+    config.vm.network  :private_network, ip: &#34;10.0.0.11&#34;
+end
+</code></pre>
+<p>Start the VM and ssh into it</p>
+<pre><code language="language-bash" class="language-bash">vagrant up
+vagrant ssh
+</code></pre>
+<h2 is-upgraded>Install k3s</h2>
+<p>To install k3s from the install scripty (not recommended in production) :</p>
+<pre><code language="language-bash" class="language-bash">curl -sfL https://get.k3s.io | sh -
+</code></pre>
+<p>Wait for the script to finish then watch nodes through kubernetes until the node is Ready :</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl get nodes -w
+</code></pre>
+<p>Congratulation you have now a working kubernetes cluster ready to work on.<br> If you want to learn more about Kubernetes components read <a href="https://kubernetes.io/docs/concepts/overview/components/" target="_blank">the doc</a>.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Pods" duration="0">
+        <p>In kubernetes world, containers running are named pods, there are more than just running container and I invite you to read the <a href="https://kubernetes.io/docs/concepts/workloads/pods/" target="_blank">official documentation</a> about it.</p>
+<p>Let&#39;s start by starting a Job with a pod from a busybox that just print something and sleep. Create a file <code>basic.yml</code> with content :</p>
+<pre><code language="language-yml" class="language-yml">apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    # This is the pod template
+    spec:
+      containers:
+      - name: hello
+        image: busybox
+        command: [&#39;sh&#39;, &#39;-c&#39;, &#39;echo &#34;Hello, Kubernetes!&#34; &amp;&amp; sleep 3600&#39;]
+      restartPolicy: OnFailure
+    # The pod template ends here
+</code></pre>
+<p>And apply it by running</p>
+<pre><code>sudo kubectl apply -f basic.yml
+</code></pre>
+<p>Congratulation, you have now launched a Job in Kubernetes ! Let&#39;s have a look at that.</p>
+<p>Let&#39;s start by looking at our pods by running</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl get pod
+</code></pre>
+<p>You should seen a pod named <code>hello-xxxxx</code>, that&#39;s your pod 👏.<br> We could look at its logs by running.</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl logs &lt;pod-name&gt;
+</code></pre>
+<p>If I run it I got :</p>
+<pre><code>vagrant@kubemaster:~$ sudo kubectl logs hello-7kn7h
+Hello, Kubernetes!
+</code></pre>
+<p>And that&#39;s what we want.</p>
+<h2 is-upgraded>Exercice</h2>
+<p>Create a job to run a busybox printing in the log a message configured by environment variable.<br> Search in the documentation of kubernetes what need to be modify based on <code>basic.yml</code> file.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Deployments" duration="0">
+        <p>If pods are the basic unit in kubernetes, Deployment are the main unit for pushing deployment units. In the previous section to run a pod we start a Job, a Job is a one of pod execution, Deployments are a deployment unit to maintain a set of pod up &amp; running.</p>
+<p>Let&#39;s create a simple deployment without a file :</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+</code></pre>
+<p>Let&#39;s have a look at it :</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl get deployments
+</code></pre>
+<p>We see our deployment 👍</p>
+<p>Search associated pod name.<br> When you have it let&#39;s se what we deployed. There is a <code>kubectl port-forward</code> that permit to redirect network form a port on the host to a pod (or a service) let&#39;s have a look.</p>
+<pre><code>sudo kubectl port-forward &lt;pod-name&gt; 8080:8080 --address=0.0.0.0
+</code></pre>
+<p>This command redirect the traffic from your host on 8080 listening to 0.0.0.0 (as from everywhere) into the port 8080 of the pod configured.<br> Now we have this command running you can open your browser on your machine and go to http://10.0.0.11:8080 and you should see waht the application print.</p>
+<h2 is-upgraded>Exercice</h2>
+<p>Create a <code>deployment.yml</code> file that create a deployment of image &#34;gcr.io/google-samples/kubernetes-bootcamp:v1&#34; like we just do.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Services" duration="0">
+        <p>An abstract way to expose an application running on a set of Pods as a network service.<br> Take some time to read the <a href="https://kubernetes.io/docs/concepts/services-networking/service/" target="_blank">official documentation</a></p>
+<p>Next, let&#39;s list the current Services from our cluster:</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl get services
+</code></pre>
+<p>Let&#39;s expose our previous deployment.</p>
+<pre><code>sudo kubectl expose deployment/kubernetes-bootcamp --type=&#34;NodePort&#34; --port 8080
+</code></pre>
+<p>We just created a service of type NodePort (aka route all the traffic on a port from the host into deployment kubernetes-bootcamp).</p>
+<p>We cand look at our service by running :</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl get service
+</code></pre>
+<p>On my test run it look like</p>
+<pre><code>sudo kubectl get service
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes            ClusterIP   10.43.0.1       &lt;none&gt;        443/TCP          148m
+kubernetes-bootcamp   NodePort    10.43.246.196   &lt;none&gt;        8080:30325/TCP   2m21s
+</code></pre>
+<p>We know have a service that expose our deployment as a port, in my example : 30325. Open now a browser on your machine and opne http://10.0.0.11/30325 (change with your own port) and your should see the application.</p>
+<p>Let&#39;s look at how the service choose to which pod it send the traffic to.</p>
+<pre><code>sudo kubectl describe svc kubernetes-bootcamp
+</code></pre>
+<p>You should see a line <code>Selector:                 app=kubernetes-bootcamp</code>. It&#39;s this line that define how a service choose the pods to send to network. By doing a selection based on their labels. To be sure about this, look as the description of the kuberneets-bootcamp pod to see that the label <code>app</code> exist with the value <code>kubernetes-bootcamp</code>.</p>
+<h2 is-upgraded>Exercice</h2>
+<p>Create a <code>service.yml</code> file that create the same service that we just created.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Scale" duration="0">
+        <p>Let&#39;s scale our deployment.</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl scale deployments/kubernetes-bootcamp --replicas=4
+</code></pre>
+<p>If you look at the pods, now the kubernetes-bootcamp is deployed with 4 pods each running the application.</p>
+<p>Let&#39;s look at how the service manage this. let&#39;s run a for loop and a curl to reuse the service (don&#39;t forget to set your port):</p>
+<pre><code language="language-bash" class="language-bash">for i in {1..10}; do curl http://localhost:30325/; done
+</code></pre>
+<p>We see that the service load balance between the pods the calls and adapted to our scale. This is possible du to the selection of the pods with labels.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Update" duration="0">
+        <p>We can edit the deployment to change all the parameters. And we could also change the image to run.<br> Let&#39;s try that and what happen by watching the pods :</p>
+<pre><code language="language-bash" class="language-bash">sudo kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+sudo kubectl get pods -w
+</code></pre>
+<p>We see that the pods are created then the old one are terminated.<br> If we run a <code>curl http://localhost:30325/;</code> we should see that the server respond a <code>v=2</code> text.</p>
+<h2 is-upgraded>Exercice</h2>
+<p>Define a <code>complete.yml</code> file that define a deployment with 3 replicas of <code>gcr.io/google-samples/kubernetes-bootcamp:v1</code> and a associated NodePort service (in the same file). Deploy it check that everything run Update the file to set the replicas to 5 and the image to <code>jocatalin/kubernetes-bootcamp:v2</code> and apply the file to see the modifications applied</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Other resources" duration="0">
+        <p>Kubernetes provide a lot of ressources by default you should check :</p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/" target="_blank">Namespaces</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/" target="_blank">DaemonSet</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/configuration/configmap/" target="_blank">ConfigMaps</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/configuration/secret/" target="_blank">Secrets</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/" target="_blank">Networking after NodePort</a></li>
+</ul>
+<p>There are plenty more but since it&#39;s not a certification but an introduction let&#39;s try some tools over Kubernetes.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Helm" duration="0">
+        <h2 is-upgraded>Installing Helm</h2>
+<p>Lookup the installation steps from the documentation <a href="https://helm.sh/docs/intro/install/" target="_blank">here</a></p>
+<h2 is-upgraded>Using Helm</h2>
+<p>This guide explains the basics of using Helm to manage packages on your Kubernetes cluster.</p>
+<h3 is-upgraded>Three Big Concepts</h3>
+<p>A Chart is a Helm package. It contains all of the resource definitions necessary to run an application, tool, or service inside of a Kubernetes cluster. Think of it like the Kubernetes equivalent of a Homebrew formula, an Apt dpkg, or a Yum RPM file.</p>
+<p>A Repository is the place where charts can be collected and shared. It&#39;s like Perl&#39;s CPAN archive or the Fedora Package Database, but for Kubernetes packages.</p>
+<p>A Release is an instance of a chart running in a Kubernetes cluster. One chart can often be installed many times into the same cluster. And each time it is installed, a new release is created. Consider a MySQL chart. If you want two databases running in your cluster, you can install that chart twice. Each one will have its own release, which will in turn have its own release name.</p>
+<p>With these concepts in mind, we can now explain Helm like this:</p>
+<p>Helm installs charts into Kubernetes, creating a new release for each installation. And to find new charts, you can search Helm chart repositories. <code>helm search</code>: Finding Charts</p>
+<p>Helm comes with a powerful search command. It can be used to search two different types of source:</p>
+<ul>
+<li><code>helm search hub</code> searches the Artifact Hub, which lists helm charts from dozens of different repositories.</li>
+<li><code>helm search repo</code> searches the repositories that you have added to your local helm client (with helm repo add). This search is done over local data, and no public network connection is needed.</li>
+</ul>
+<p>You can find publicly available charts by running helm search hub:</p>
+<pre><code language="language-bash" class="language-bash">$ helm search hub wordpress
+URL                                                 CHART VERSION APP VERSION DESCRIPTION
+https://hub.helm.sh/charts/bitnami/wordpress        7.6.7         5.2.4       Web publishing platform for building blogs and ...
+https://hub.helm.sh/charts/presslabs/wordpress-...  v0.6.3        v0.6.3      Presslabs WordPress Operator Helm Chart
+https://hub.helm.sh/charts/presslabs/wordpress-...  v0.7.1        v0.7.1      A Helm chart for deploying a WordPress site on ...
+</code></pre>
+<p>The above searches for all wordpress charts on Artifact Hub.</p>
+<p>With no filter, <code>helm search hub</code> shows you all of the available charts.</p>
+<p>Using <code>helm search repo</code>, you can find the names of the charts in repositories you have already added:</p>
+<pre><code language="language-bash" class="language-bash">$ helm repo add brigade https://brigadecore.github.io/charts
+&#34;brigade&#34; has been added to your repositories
+$ helm search repo brigade
+NAME                          CHART VERSION APP VERSION DESCRIPTION
+brigade/brigade               1.3.2         v1.2.1      Brigade provides event-driven scripting of Kube...
+brigade/brigade-github-app    0.4.1         v0.2.1      The Brigade GitHub App, an advanced gateway for...
+brigade/brigade-github-oauth  0.2.0         v0.20.0     The legacy OAuth GitHub Gateway for Brigade
+brigade/brigade-k8s-gateway   0.1.0                     A Helm chart for Kubernetes
+brigade/brigade-project       1.0.0         v1.0.0      Create a Brigade project
+brigade/kashti                0.4.0         v0.4.0      A Helm chart for Kubernetes
+</code></pre>
+<p>Helm search uses a fuzzy string matching algorithm, so you can type parts of words or phrases:</p>
+<pre><code language="language-bash" class="language-bash">$ helm search repo kash
+NAME            CHART VERSION APP VERSION DESCRIPTION
+brigade/kashti  0.4.0         v0.4.0      A Helm chart for Kubernetes
+</code></pre>
+<p>Search is a good way to find available packages. Once you have found a package you want to install, you can use <code>helm install</code> to install it.</p>
+<h2 is-upgraded>Installing a Package</h2>
+<p>To install a new package, use the <code>helm install</code> command. At its simplest, it takes two arguments: A release name that you pick, and the name of the chart you want to install.</p>
+<pre><code language="language-bash" class="language-bash">$ helm install happy-panda bitnami/wordpress
+NAME: happy-panda
+LAST DEPLOYED: Tue Jan 26 10:27:17 2021
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+** Please be patient while the chart is being deployed **
+
+Your WordPress site can be accessed through the following DNS name from within your cluster:
+
+    happy-panda-wordpress.default.svc.cluster.local (port 80)
+
+To access your WordPress site from outside the cluster follow the steps below:
+
+1. Get the WordPress URL by running these commands:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: &#39;kubectl get svc --namespace default -w happy-panda-wordpress&#39;
+
+   export SERVICE_IP=$(kubectl get svc --namespace default happy-panda-wordpress --template &#34;&#123;&#123; range (index .status.loadBalancer.ingress 0) }}&#123;&#123;.}}&#123;&#123; end }}&#34;)
+   echo &#34;WordPress URL: http://$SERVICE_IP/&#34;
+   echo &#34;WordPress Admin URL: http://$SERVICE_IP/admin&#34;
+
+2. Open a browser and access WordPress using the obtained URL.
+
+3. Login with the following credentials below to see your blog:
+
+  echo Username: user
+  echo Password: $(kubectl get secret --namespace default happy-panda-wordpress -o jsonpath=&#34;{.data.wordpress-password}&#34; | base64 --decode)
+</code></pre>
+<p>Now the wordpress chart is installed. Note that installing a chart creates a new release object. The release above is named <code>happy-panda</code>. (If you want Helm to generate a name for you, leave off the release name and use <code>--generate-name</code>.)</p>
+<p>During installation, the helm client will print useful information about which resources were created, what the state of the release is, and also whether there are additional configuration steps you can or should take.</p>
+<p>Helm installs resources in the following order:</p>
+<ul>
+<li>Namespace</li>
+<li>NetworkPolicy</li>
+<li>ResourceQuota</li>
+<li>LimitRange</li>
+<li>PodSecurityPolicy</li>
+<li>PodDisruptionBudget</li>
+<li>ServiceAccount</li>
+<li>Secret</li>
+<li>SecretList</li>
+<li>ConfigMap</li>
+<li>StorageClass</li>
+<li>PersistentVolume</li>
+<li>PersistentVolumeClaim</li>
+<li>CustomResourceDefinition</li>
+<li>ClusterRole</li>
+<li>ClusterRoleList</li>
+<li>ClusterRoleBinding</li>
+<li>ClusterRoleBindingList</li>
+<li>Role</li>
+<li>RoleList</li>
+<li>RoleBinding</li>
+<li>RoleBindingList</li>
+<li>Service</li>
+<li>DaemonSet</li>
+<li>Pod</li>
+<li>ReplicationController</li>
+<li>ReplicaSet</li>
+<li>Deployment</li>
+<li>HorizontalPodAutoscaler</li>
+<li>StatefulSet</li>
+<li>Job</li>
+<li>CronJob</li>
+<li>Ingress</li>
+<li>APIService</li>
+</ul>
+<p>Helm does not wait until all of the resources are running before it exits. Many charts require Docker images that are over 600M in size, and may take a long time to install into the cluster.</p>
+<p>To keep track of a release&#39;s state, or to re-read configuration information, you can use <code>helm status</code>:</p>
+<pre><code language="language-bash" class="language-bash">$ helm status happy-panda
+NAME: happy-panda
+LAST DEPLOYED: Tue Jan 26 10:27:17 2021
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+** Please be patient while the chart is being deployed **
+
+Your WordPress site can be accessed through the following DNS name from within your cluster:
+
+    happy-panda-wordpress.default.svc.cluster.local (port 80)
+
+To access your WordPress site from outside the cluster follow the steps below:
+
+1. Get the WordPress URL by running these commands:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: &#39;kubectl get svc --namespace default -w happy-panda-wordpress&#39;
+
+   export SERVICE_IP=$(kubectl get svc --namespace default happy-panda-wordpress --template &#34;&#123;&#123; range (index .status.loadBalancer.ingress 0) }}&#123;&#123;.}}&#123;&#123; end }}&#34;)
+   echo &#34;WordPress URL: http://$SERVICE_IP/&#34;
+   echo &#34;WordPress Admin URL: http://$SERVICE_IP/admin&#34;
+
+2. Open a browser and access WordPress using the obtained URL.
+
+3. Login with the following credentials below to see your blog:
+
+  echo Username: user
+  echo Password: $(kubectl get secret --namespace default happy-panda-wordpress -o jsonpath=&#34;{.data.wordpress-password}&#34; | base64 --decode)
+</code></pre>
+<p>The above shows the current state of your release.</p>
+<h2 is-upgraded>Customizing the Chart Before Installing</h2>
+<p>Installing the way we have here will only use the default configuration options for this chart. Many times, you will want to customize the chart to use your preferred configuration.</p>
+<p>To see what options are configurable on a chart, use helm show values:</p>
+<pre><code language="language-bash" class="language-bash">$ helm show values bitnami/wordpress
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry and imagePullSecrets
+##
+# global:
+#   imageRegistry: myRegistryName
+#   imagePullSecrets:
+#     - myRegistryKeySecretName
+#   storageClass: myStorageClass
+
+## Bitnami WordPress image version
+## ref: https://hub.docker.com/r/bitnami/wordpress/tags/
+##
+image:
+  registry: docker.io
+  repository: bitnami/wordpress
+  tag: 5.6.0-debian-10-r35
+  [..]
+</code></pre>
+<p>You can then override any of these settings in a YAML formatted file, and then pass that file during installation.</p>
+<pre><code language="language-bash" class="language-bash">$ echo &#39;{mariadb.auth.database: user0db, mariadb.auth.username: user0}&#39; &gt; values.yaml
+$ helm install -f values.yaml bitnami/wordpress --generate-name
+</code></pre>
+<p>The above will create a default MariaDB user with the name user0, and grant this user access to a newly created user0db database, but will accept all the rest of the defaults for that chart.</p>
+<p>There are two ways to pass configuration data during install:</p>
+<ul>
+<li><code>--values</code> (or <code>-f</code>): Specify a YAML file with overrides. This can be specified multiple times and the rightmost file will take precedence</li>
+<li><code>--set</code>: Specify overrides on the command line.</li>
+</ul>
+<p>If both are used, <code>--set</code> values are merged into <code>--values</code> with higher precedence. Overrides specified with <code>--set</code> are persisted in a ConfigMap. Values that have been <code>--set</code> can be viewed for a given release with helm get values . Values that have been <code>--set</code> can be cleared by running helm upgrade with <code>--reset-values</code> specified.</p>
+<h2 is-upgraded>The Format and Limitations of <code>--set</code></h2>
+<p>The <code>--set</code> option takes zero or more name/value pairs. At its simplest, it is used like this: <code>--set name=value</code>. The YAML equivalent of that is:</p>
+<pre><code language="language-yaml" class="language-yaml">name: value
+</code></pre>
+<p>Multiple values are separated by , characters. So <code>--set a=b,c=d</code> becomes:</p>
+<pre><code language="language-yaml" class="language-yaml">a: b
+c: d
+</code></pre>
+<p>More complex expressions are supported. For example, <code>--set outer.inner=value</code> is translated into this:</p>
+<pre><code language="language-yaml" class="language-yaml">outer:
+  inner: value
+</code></pre>
+<p>Lists can be expressed by enclosing values in <code>{</code> and <code>}</code>. For example, <code>--set name={a, b, c}</code> translates to:</p>
+<pre><code language="language-yaml" class="language-yaml">name:
+  - a
+  - b
+  - c
+</code></pre>
+<p>As of Helm 2.5.0, it is possible to access list items using an array index syntax. For example, <code>--set servers[0].port=80</code> becomes:</p>
+<pre><code language="language-yaml" class="language-yaml">servers:
+  - port: 80
+</code></pre>
+<p>Multiple values can be set this way. The line <code>--set servers[0].port=80,servers[0].host=example</code> becomes:</p>
+<pre><code language="language-yaml" class="language-yaml">servers:
+  - port: 80
+    host: example
+</code></pre>
+<p>Sometimes you need to use special characters in your <code>--set</code> lines. You can use a backslash to escape the characters; <code>--set name=value1\,value2</code> will become:</p>
+<pre><code language="language-yaml" class="language-yaml">name: &#34;value1,value2&#34;
+</code></pre>
+<p>Similarly, you can escape dot sequences as well, which may come in handy when charts use the toYaml function to parse annotations, labels and node selectors. The syntax for <code>--set nodeSelector."kubernetes\.io/role"=master</code> becomes:</p>
+<pre><code language="language-yaml" class="language-yaml">nodeSelector:
+  kubernetes.io/role: master
+</code></pre>
+<p>Deeply nested data structures can be difficult to express using <code>--set</code>. Chart designers are encouraged to consider the <code>--set</code> usage when designing the format of a values.yaml file (read more about Values Files).</p>
+<h2 is-upgraded>More Installation Methods</h2>
+<p>The <code>helm install</code> command can install from several sources:</p>
+<ul>
+<li>A chart repository (as we&#39;ve seen above)</li>
+<li>A local chart archive (<code>helm install foo foo-0.1.1.tgz</code>)</li>
+<li>An unpacked chart directory (<code>helm install foo path/to/foo</code>)</li>
+<li>A full URL (<code>helm install foo https://example.com/charts/foo-1.2.3.tgz</code>)</li>
+</ul>
+<h2 is-upgraded><code>helm upgrade</code> and <code>helm rollback</code>: Upgrading a Release, and Recovering on Failure</h2>
+<p>When a new version of a chart is released, or when you want to change the configuration of your release, you can use the <code>helm upgrade</code> command.</p>
+<p>An upgrade takes an existing release and upgrades it according to the information you provide. Because Kubernetes charts can be large and complex, Helm tries to perform the least invasive upgrade. It will only update things that have changed since the last release.</p>
+<pre><code language="language-bash" class="language-bash">$ helm upgrade -f panda.yaml happy-panda bitnami/wordpress
+</code></pre>
+<p>In the above case, the happy-panda release is upgraded with the same chart, but with a new YAML file:</p>
+<pre><code language="language-yaml" class="language-yaml">mariadb.auth.username: user1
+</code></pre>
+<p>We can use helm get values to see whether that new setting took effect.</p>
+<pre><code language="language-bash" class="language-bash">$ helm get values happy-panda
+mariadb:
+  auth:
+    username: user1
+</code></pre>
+<p>The <code>helm</code> get command is a useful tool for looking at a release in the cluster. And as we can see above, it shows that our new values from panda.yaml were deployed to the cluster.</p>
+<p>Now, if something does not go as planned during a release, it is easy to roll back to a previous release using helm rollback [RELEASE] [REVISION].</p>
+<pre><code language="language-bash" class="language-bash">$ helm rollback happy-panda 1
+</code></pre>
+<p>The above rolls back our happy-panda to its very first release version. A release version is an incremental revision. Every time an install, upgrade, or rollback happens, the revision number is incremented by 1. The first revision number is always 1. And we can use <code>helm history</code> [RELEASE] to see revision numbers for a certain release.</p>
+<h2 is-upgraded>Helpful Options for Install/Upgrade/Rollback</h2>
+<p>There are several other helpful options you can specify for customizing the behavior of Helm during an install/upgrade/rollback. Please note that this is not a full list of cli flags. To see a description of all flags, just run helm  –help.</p>
+<ul>
+<li><code>--timeout</code>: A Go duration value to wait for Kubernetes commands to complete. This defaults to 5m0s.</li>
+<li><code>--wait</code>: Waits until all Pods are in a ready state, PVCs are bound, Deployments have minimum (<code>Desired</code> minus <code>maxUnavailable</code>) Pods in ready state and - <code>Services have an IP address (and Ingress if a LoadBalancer) before marking the release as successful. It will wait for as long as the</code> –timeout<code>value. -</code>If timeout is reached, the release will be marked as <code>FAILED</code>. Note: In scenarios where Deployment has replicas set to 1 and <code>maxUnavailable</code> is not set - `to 0 as part of rolling update strategy, –wait will return as ready as it has satisfied the minimum Pod in ready condition.</li>
+<li><code>--no-hooks</code>: This skips running hooks for the command</li>
+<li><code>--recreate-pods</code> (only available for <code>upgrade</code> and <code>rollback</code>): This flag will cause all pods to be recreated (with the exception of pods belonging to deployments). (DEPRECATED in Helm 3)</li>
+</ul>
+<h2 is-upgraded><code>helm uninstall</code>: Uninstalling a Release</h2>
+<p>When it is time to uninstall a release from the cluster, use the <code>helm uninstall</code> command:</p>
+<pre><code language="language-bash" class="language-bash">$ helm uninstall happy-panda
+</code></pre>
+<p>This will remove the release from the cluster. You can see all of your currently deployed releases with the <code>helm list</code> command:</p>
+<pre><code language="language-bash" class="language-bash">$ helm list
+NAME            VERSION UPDATED                         STATUS          CHART
+inky-cat        1       Wed Sep 28 12:59:46 2016        DEPLOYED        alpine-0.1.0
+</code></pre>
+<p>From the output above, we can see that the happy-panda release was uninstalled.</p>
+<p>In previous versions of Helm, when a release was deleted, a record of its deletion would remain. In Helm 3, deletion removes the release record as well. If you wish to keep a deletion release record, use <code>helm uninstall --keep-history</code>. Using <code>helm list --uninstalled</code> will only show releases that were uninstalled with the <code>--keep-history</code> flag.</p>
+<p>The <code>helm list --all</code> flag will show you all release records that Helm has retained, including records for failed or deleted items (if <code>--keep-history</code> was specified):</p>
+<pre><code language="language-bash" class="language-bash">$  helm list --all
+NAME            VERSION UPDATED                         STATUS          CHART
+happy-panda     2       Wed Sep 28 12:47:54 2016        UNINSTALLED     wordpress-10.4.5.6.0
+inky-cat        1       Wed Sep 28 12:59:46 2016        DEPLOYED        alpine-0.1.0
+kindred-angelf  2       Tue Sep 27 16:16:10 2016        UNINSTALLED     alpine-0.1.0
+</code></pre>
+<p>Note that because releases are now deleted by default, it is no longer possible to rollback an uninstalled resource.</p>
+<h2 is-upgraded>Working with Repositories</h2>
+<p>Helm 3 no longer ships with a default chart repository. The <code>helm repo</code> command group provides commands to add, list, and remove repositories.</p>
+<p>You can see which repositories are configured using <code>helm repo list</code>:</p>
+<pre><code language="language-bash" class="language-bash">$ helm repo list
+NAME            URL
+stable          https://charts.helm.sh/stable
+mumoshu         https://mumoshu.github.io/charts
+</code></pre>
+<p>And new repositories can be added with helm repo add:</p>
+<pre><code language="language-bash" class="language-bash">$ helm repo add dev https://example.com/dev-charts
+</code></pre>
+<p>Because chart repositories change frequently, at any point you can make sure your Helm client is up to date by running helm repo update.</p>
+<p>Repositories can be removed with helm repo remove.</p>
+<h2 is-upgraded>Creating Your Own Charts</h2>
+<p>The <a href="https://helm.sh/docs/topics/charts/" target="_blank">Chart Development Guide</a> explains how to develop your own charts. But you can get started quickly by using the helm create command:</p>
+<pre><code language="language-bash" class="language-bash">$ helm create deis-workflow
+</code></pre>
+<p>Creating deis-workflow</p>
+<p>Now there is a chart in <code>./deis-workflow</code>. You can edit it and create your own templates.</p>
+<p>As you edit your chart, you can validate that it is well-formed by running <code>helm lint</code>.</p>
+<p>When it&#39;s time to package the chart up for distribution, you can run the helm package command:</p>
+<pre><code language="language-bash" class="language-bash">$ helm package deis-workflow
+deis-workflow-0.1.0.tgz
+</code></pre>
+<p>And that chart can now easily be installed by helm install:</p>
+<pre><code language="language-bash" class="language-bash">$ helm install deis-workflow ./deis-workflow-0.1.0.tgz
+...
+</code></pre>
+<p>Charts that are packaged can be loaded into chart repositories. See the documentation for Helm chart repositories for more details.</p>
+<h2 is-upgraded>Conclusion</h2>
+<p>This chapter has covered the basic usage patterns of the helm client, including searching, installation, upgrading, and uninstalling. It has also covered useful utility commands like <code>helm status</code>, <code>helm get</code>, and <code>helm repo</code>.</p>
+<p>For more information on these commands, take a look at Helm&#39;s built-in help: <code>helm help</code>.</p>
+<p>This introduction is also a copy/paste of the official <a href="https://helm.sh/docs/intro/using_helm/" target="_blank">Helm doc</a>. Because why recreate some basic guide when the existing official one is weel written.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Traefik" duration="0">
+        <p>Traefik is a load balancer with dynamic configuration reload that can be plugged with various backend to enable routing automatically and it work with Kubernetes.</p>
+<p>Traefik is installed by default on <code>k3s</code> clusters so we could use it.</p>
+<h2 is-upgraded>Accessing dashboard</h2>
+<p>Traefik dashboard is not exposed through the exterior of the cluster by default. We need to add a <code>IngressRoute</code> configuration to enable it.</p>
+<pre><code language="language-yaml" class="language-yaml">apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-external-dashboard
+  namespace: kube-system
+spec:
+  entryPoints:
+  - web
+  routes:
+  - kind: Rule
+    match: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+    services:
+    - kind: TraefikService
+      name: api@internal
+</code></pre>
+<p>Apply this ressource in your cluster and then test to access the Traefik dashboard on http://10.0.0.11/dashboard/#/.<br> You should access the traefik dashboard.</p>
+<p class="image-container"><img alt="traefik dashboard" src="img/dc10131d9dd7ae7b.png"></p>
+<h2 is-upgraded>Expose a service</h2>
+<p>Let&#39;s first create a deployment with multiple replicas.</p>
+<pre><code language="language-yaml" class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami-deployment
+  labels:
+    app: whoami
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      containers:
+      - name: whoami
+        image: containous/whoami:v1.5.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+</code></pre>
+<p>Check the deployment and that all the pods are healthy.</p>
+<p>Now that we have our application deployed, let&#39;s create a kubernetes Service to provide an entrypoint in the server for our application.</p>
+<pre><code language="language-yaml" class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: whoami-service
+spec:
+  selector:
+    app: whoami
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+</code></pre>
+<p>At this point, it&#39;s standard Kubernetes ressoucres. We created an application deployment with 3 replicas and a service to be able to communicate in the cluster with this application.<br> Now let&#39;s create a specific traefik <code>IngressRoute</code> to expose our Service to the external world.</p>
+<pre><code language="language-yaml" class="language-yaml">apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: PathPrefix(`/whoami`)
+    kind: Rule
+    services:
+    - name: whoami-service
+      namespace: default
+      port: 80
+</code></pre>
+<p>As you can see in the <code>apiVersion</code> this ressources is not a standard Kubernetes one, it&#39;s a Traefik specific one.<br> Kubernetes allow third party system to create and manage ressources in the cluster with a mecanism named <code>Custom Ressource Definition</code>. We will not cover this in this course, but you could look about it by yourself.</p>
+<p>This ressource create a descriptor for an <code>IngressRoute</code> as in route for incoming traffic to define some rule and send them to a target service.<br> Here we defined that all request atching a path starting with <code>/whoami</code> should be sent to <code>whoami-service</code>.</p>
+<p>We could check that our application is availble from the outside of our cluster : http://10.0.0.11/whoami<br> Check also the Treafik dashboard to look on how it&#39;s configured inside Traefik.</p>
+<h2 is-upgraded>Conclusion</h2>
+<p>We just have used a solution of Ingress controller that is available on Kubernetes. There are other solutions avaiables like NGinx, HAProxy, ...  You can find a more exhaustive list on the <a href="https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/" target="_blank">official documentation</a></p>
+<p>To find more information on Traefik, please look at the <a href="https://traefik.io/traefik/" target="_blank">official website</a></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

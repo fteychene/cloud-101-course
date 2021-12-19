@@ -1,0 +1,20 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2021-12-19T23:09:57+01:00",
+  "id": "getting-started-ansible",
+  "duration": 0,
+  "title": "Getting started with Ansible",
+  "authors": "Ansible",
+  "summary": "Getting Started with Ansible",
+  "source": "/home/fteychene/projects/cloud-101-course/codelabs/ansible.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": null,
+  "tags": [],
+  "url": "getting-started-ansible"
+}
