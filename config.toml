@@ -14,7 +14,7 @@ disableKinds = ["taxonomy", "term"]
 
   links = [
     { vagrant = { href = "getting-started-vagrant/index.html?index=cloud-101-course", text = "Vagrant" }},
-    { ansible = { href = "getting-started-ansible/index.html&index=cloud-101-course", text = "Ansible" }},
+    { ansible = { href = "getting-started-ansible/index.html?index=cloud-101-course", text = "Ansible" }},
     { kubernetes = { href = "getting-started-kubernetes/index.html?index=cloud-101-course", text = "Kubernetes" }}
   ]
 
