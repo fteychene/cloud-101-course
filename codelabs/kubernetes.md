@@ -2,6 +2,7 @@ summary: Getting Started with Kubernetes
 id: getting-started-kubernetes
 status: Published 
 authors: fteychene and Helm
+feedback link: https://fteychene.github.io/cloud-101-course/
 
 # Getting Started with Kubernetes
 

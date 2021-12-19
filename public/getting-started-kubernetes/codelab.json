@@ -3,7 +3,7 @@
   "format": "html",
   "prefix": "https://storage.googleapis.com",
   "mainga": "UA-49880327-14",
-  "updated": "2021-12-19T23:09:57+01:00",
+  "updated": "2021-12-19T23:58:21+01:00",
   "id": "getting-started-kubernetes",
   "duration": 0,
   "title": "Getting Started with Kubernetes",
@@ -16,5 +16,6 @@
   ],
   "category": null,
   "tags": [],
+  "feedback": "https://fteychene.github.io/cloud-101-course/",
   "url": "getting-started-kubernetes"
 }
