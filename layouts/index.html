@@ -1,0 +1,47 @@
+{{ define "main" }}
+  <article class="flex flex-col items-center justify-center h-full mt-10 text-center">
+    <header class="flex flex-col items-center mb-3">
+      {{ with .Site.Author.image }}
+        <img class="mb-2 rounded-full w-36 h-36" src="{{ . | relURL }}" />
+      {{ end }}
+      <h1 class="text-4xl font-extrabold light:text-white">
+        {{ .Params.title | default .Site.Author.name | default .Site.Title | emojify }}
+      </h1>
+      {{ with .Content }}
+        <section class="pt-5 prose light:prose-light">{{ . | emojify }}</section>
+      {{ end }}
+    </header>
+    {{ with .Site.Author.links }}
+      <div class="flex flex-col flex-wrap min-w-full mt-4 sm:min-w-0">
+        {{ range $links := . }}
+          {{ range $type, $data := $links }}
+            {{ $href := $data }}
+            {{ $icon := $type }}
+            {{ $text := i18n (printf "link.%s" $type) }}
+            {{ $target := "_blank" }}
+            {{ $title := "" }}
+            {{ if reflect.IsMap $data }}
+              {{ with $data.href }}{{ $href = . }}{{ end }}
+              {{ with $data.icon }}{{ $icon = . }}{{ end }}
+              {{ with $data.text }}{{ $text = . }}{{ end }}
+              {{ with $data.target }}{{ $target = . }}{{ end }}
+              {{ with $data.title }}{{ $title = . }}{{ end }}
+            {{ end }}
+            <a
+              class="link link-{{ $type }} sm:px-24 min-w-full py-2 mb-3 text-lg rounded"
+              href="{{ $href }}"
+              target="{{ $target }}"
+              {{ with $title }}title="{{ . }}"{{ end }}
+              rel="me noopener noreferrer"
+            >
+              {{- with $icon -}}
+                <span class="mr-1">{{ partial "icon.html" . }}</span>
+              {{- end -}}
+              {{ $text | emojify }}
+            </a>
+          {{ end }}
+        {{ end }}
+      </div>
+    {{ end }}
+  </article>
+{{ end }}

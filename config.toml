@@ -1,0 +1,24 @@
+baseURL = "https://fteychene.github.io/cloud-101-course/"
+languageCode = "en"
+defaultContentLanguage = "en"
+
+title = "Cloud 101"
+copyright = "fteychene 2021"
+
+enableEmoji = true
+disableKinds = ["taxonomy", "term"]
+
+[author]
+  name = "Cloud 101"
+  # image = "img/author.jpg"  # path relative to static directory
+
+  links = [
+    { vagrant = { href = "https://fteychene.github.io/cloud-101-course/codelabs/getting-started-vagrant/index.html", text = "Vagrant" }},
+    { ansible = { href = "https://fteychene.github.io/cloud-101-course/codelabs/getting-started-ansible/index.html", text = "Ansible" }},
+    { kubernetes = { href = "https://fteychene.github.io/cloud-101-course/codelabs/getting-started-kubernetes/index.html", text = "Kubernetes" }}
+  ]
+
+[module]
+  [module.hugoVersion]
+    extended = false
+    min = "0.86.1"

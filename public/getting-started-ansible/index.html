@@ -1,0 +1,354 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Getting started with Ansible</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="getting-started-ansible"
+                  title="Getting started with Ansible"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Ansible" duration="0">
+        <p>Ansible is an IT automation tool. It can configure systems, deploy software, and orchestrate more advanced IT tasks such as continuous deployments or zero downtime rolling updates.</p>
+<p>Ansible&#39;s main goals are simplicity and ease-of-use. It also has a strong focus on security and reliability, featuring a minimum of moving parts, usage of OpenSSH for transport (with other transports and pull modes as alternatives), and a language that is designed around auditability by humans–even those not familiar with the program.</p>
+<p>It a widely used solution in the industry for various use cases, from environment&#39;s configuration to specific local installation for immutable infrastructure.</p>
+<p>Our goal in this codelab is to play with Ansible, try some basics features and let you explore the wide ansible ecosystem by yourself.</p>
+<h2 is-upgraded>Installation</h2>
+<p>The instruction for installation can be found <a href="https://docs.ansible.com/ansible/2.5/installation_guide/intro_installation.html" target="_blank">here</a></p>
+<p>Check the pre-requisites and follow the installation instructions for your environment.</p>
+<aside class="warning"><p> Since Ansible is a trool to manage remote machines it choose to use ssh connection to target machine. Ensure that you have ssh configuration well configured if you are on Windows environment. </p>
+</aside>
+<h2 is-upgraded>Create target VM</h2>
+<p>Create a fresh VM with <code>vagrant</code> to use ansible on it with the following configuration</p>
+<pre><code language="language-ruby" class="language-ruby">Vagrant.configure(&#34;2&#34;) do |config|
+  config.vm.box = &#34;ubuntu/focal64&#34;
+
+  config.vm.network :private_network, ip: &#34;192.168.0.2&#34;
+
+  config.ssh.forward_agent    = true
+  config.ssh.insert_key       = false
+  config.ssh.private_key_path =  [&#34;~/.vagrant.d/insecure_private_key&#34;,&#34;~/.ssh/id_rsa&#34;]
+  config.vm.provision :shell, privileged: false do |s|
+    ssh_pub_key = File.readlines(&#34;#{Dir.home}/.ssh/id_rsa.pub&#34;).first.strip
+    s.inline = &lt;&lt;-SHELL
+      echo #{ssh_pub_key} &gt;&gt; /home/$USER/.ssh/authorized_keys
+      sudo bash -c &#34;echo #{ssh_pub_key} &gt;&gt; /root/.ssh/authorized_keys&#34;
+      sudo apt-get update
+      sudo apt-get install -y python
+    SHELL
+  end
+end
+</code></pre>
+<p>Ansible use ssh to connect to target VM and execute command on machines.<br> This configuration add your local machine ssh keys to the accepted configuration of the custom VM.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Basics" duration="0">
+        <h2 is-upgraded>Inventory</h2>
+<p>Ansible works against multiple systems in your infrastructure at the same time. It does this by selecting portions of systems listed in Ansible&#39;s inventory, which defaults to being saved in the location <code>/etc/ansible/hosts</code>. You can specify a different inventory file using the -i  option on the command line.</p>
+<p>To work on your new configured VM, add it&#39;s ip to the ansible inventory file <code>/etc/ansible/hosts</code></p>
+<pre><code language="language-bash" class="language-bash">echo 192.168.0.2 &gt;&gt; /etc/ansible/hosts
+</code></pre>
+<p>By doing this you add your VM to the global inventory of ansible in the all group (if you don&#39;t have already some groupe configured in this file ...).</p>
+<p>You can test the connection to your VM with the ansible command, using the <code>ping</code> module.</p>
+<pre><code language="language-bash" class="language-bash">ansible all -u vagrant -m ping 
+</code></pre>
+<p>The <code>-u</code> option define the suer to connect with on the VM.<br> Th <code>-m</code> define the module to be executed on VMs from the all group</p>
+<h2 is-upgraded>Connection user</h2>
+<p>If you would like to access sudo mode, there are also flags to do that:</p>
+<pre><code language="language-bash" class="language-bash"># as bruce
+$ ansible all -m ping -u bruce
+# as bruce, sudoing to root
+$ ansible all -m ping -u bruce -b
+# as bruce, sudoing to batman
+$ ansible all -m ping -u bruce -b --become-user batman
+</code></pre>
+<p>(The sudo implementation is changeable in Ansible&#39;s configuration file if you happen to want to use a sudo replacement. Flags passed to sudo (like -H) can also be set there.)</p>
+<h2 is-upgraded>Ad-hoc commands</h2>
+<p>Now run a live command on all of your nodes:</p>
+<pre><code language="language-bash" class="language-bash">$ ansible all -u vagrant -a &#34;/bin/echo hello&#34;
+</code></pre>
+<p>Congratulations! You&#39;ve just contacted your nodes with Ansible.<br> It&#39;s soon going to be time to:</p>
+<ul>
+<li>read about some more real-world cases in Introduction To Ad-Hoc Commands</li>
+<li>explore what you can do with different modules</li>
+<li>learn about the Ansible Working With Playbooks language. Ansible is not just about running commands, it also has powerful configuration management and deployment features.</li>
+</ul>
+<p>There&#39;s more to explore, but you already have a fully working infrastructure!</p>
+<h2 is-upgraded>Excercice</h2>
+<p>Start multiple VMs and configure ansible to run <code>hostname</code> to all your VM with one command</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Inventory" duration="0">
+        <p>We already saw a basic invetory by adding our cutom VM in the inventory to work on it. Now we&#39;re gonna look at you to build more complex inventory.</p>
+<p>You can use multiple inventory files at the same time as described in Using multiple inventory sources, and/or pull inventory from dynamic or cloud sources or different formats (YAML, ini, and so on).</p>
+<h2 is-upgraded>Inventory basics: formats, hosts, and groups</h2>
+<p>The inventory file can be in one of many formats, depending on the inventory plugins you have. The most common formats are INI and YAML. A basic INI /etc/ansible/hosts might look like this:</p>
+<pre><code>mail.example.com
+
+[webservers]
+foo.example.com
+bar.example.com
+
+[dbservers]
+one.example.com
+two.example.com
+three.example.com
+</code></pre>
+<p>The headings in brackets are group names, which are used in classifying hosts and deciding what hosts you are controlling at what times and for what purpose. Group names should follow the same guidelines as Creating valid variable names.</p>
+<p>Here&#39;s that same basic inventory file in YAML format:</p>
+<pre><code language="language-yaml" class="language-yaml">all:
+  hosts:
+    mail.example.com:
+  children:
+    webservers:
+      hosts:
+        foo.example.com:
+        bar.example.com:
+    dbservers:
+      hosts:
+        one.example.com:
+        two.example.com:
+        three.example.com:
+</code></pre>
+<h3 is-upgraded>Default groups</h3>
+<p>There are two default groups: all and ungrouped. The all group contains every host. The ungrouped group contains all hosts that don&#39;t have another group aside from all. Every host will always belong to at least 2 groups (all and ungrouped or all and some other group). Though all and ungrouped are always present, they can be implicit and not appear in group listings like group_names.</p>
+<h3 is-upgraded>Hosts in multiple groups</h3>
+<p>You can (and probably will) put each host in more than one group. For example a production webserver in a datacenter in Atlanta might be included in groups called [prod] and [atlanta] and [webservers]. You can create groups that track:</p>
+<ul>
+<li>What - An application, stack or microservice (for example, database servers, web servers, and so on).</li>
+<li>Where - A datacenter or region, to talk to local DNS, storage, and so on (for example, east, west).</li>
+<li>When - The development stage, to avoid testing on production resources (for example, prod, test).</li>
+</ul>
+<p>Extending the previous YAML inventory to include what, when, and where would look like:</p>
+<pre><code>all:
+  hosts:
+    mail.example.com:
+  children:
+    webservers:
+      hosts:
+        foo.example.com:
+        bar.example.com:
+    dbservers:
+      hosts:
+        one.example.com:
+        two.example.com:
+        three.example.com:
+    east:
+      hosts:
+        foo.example.com:
+        one.example.com:
+        two.example.com:
+    west:
+      hosts:
+        bar.example.com:
+        three.example.com:
+    prod:
+      hosts:
+        foo.example.com:
+        one.example.com:
+        two.example.com:
+    test:
+      hosts:
+        bar.example.com:
+        three.example.com:
+</code></pre>
+<p>You can see that one.example.com exists in the dbservers, east, and prod groups.</p>
+<p>You can also use nested groups to simplify prod and test in this inventory, for the same result:</p>
+<pre><code language="language-yaml" class="language-yaml">all:
+  hosts:
+    mail.example.com:
+  children:
+    webservers:
+      hosts:
+        foo.example.com:
+        bar.example.com:
+    dbservers:
+      hosts:
+        one.example.com:
+        two.example.com:
+        three.example.com:
+    east:
+      hosts:
+        foo.example.com:
+        one.example.com:
+        two.example.com:
+    west:
+      hosts:
+        bar.example.com:
+        three.example.com:
+    prod:
+      children:
+        east:
+    test:
+      children:
+        west:
+</code></pre>
+<h2 is-upgraded>Adding variables to inventory</h2>
+<p>You can store variable values that relate to a specific host or group in inventory. To start with, you may add variables directly to the hosts and groups in your main inventory file. As you add more and more managed nodes to your Ansible inventory, however, you will likely want to store variables in separate host and group variable files.</p>
+<h3 is-upgraded>Assigning a variable to one machine: host variables</h3>
+<p>You can easily assign a variable to a single host, then use it later in playbooks. In INI:</p>
+<pre><code>[atlanta]
+host1 http_port=80 maxRequestsPerChild=808
+host2 http_port=303 maxRequestsPerChild=909
+</code></pre>
+<p>In YAML:</p>
+<pre><code language="language-yaml" class="language-yaml">atlanta:
+  hosts:
+    host1:
+      http_port: 80
+      maxRequestsPerChild: 808
+    host2:
+      http_port: 303
+      maxRequestsPerChild: 909
+</code></pre>
+<p>Unique values like non-standard SSH ports work well as host variables. You can add them to your Ansible inventory by adding the port number after the hostname with a colon: <code>badwolf.example.com:5309</code></p>
+<p>Connection variables also work well as host variables:</p>
+<pre><code>[targets]
+
+localhost              ansible_connection=local
+other1.example.com     ansible_connection=ssh        ansible_user=myuser
+other2.example.com     ansible_connection=ssh        ansible_user=myotheruser
+</code></pre>
+<h3 is-upgraded>Assigning a variable to many machines: group variables</h3>
+<p>If all hosts in a group share a variable value, you can apply that variable to an entire group at once. In INI:</p>
+<pre><code>[atlanta]
+host1
+host2
+
+[atlanta:vars]
+ntp_server=ntp.atlanta.example.com
+proxy=proxy.atlanta.example.com
+</code></pre>
+<p>In YAML:</p>
+<pre><code language="language-yaml" class="language-yaml">atlanta:
+  hosts:
+    host1:
+    host2:
+  vars:
+    ntp_server: ntp.atlanta.example.com
+    proxy: proxy.atlanta.example.com
+</code></pre>
+<p>Group variables are a convenient way to apply variables to multiple hosts at once. Before executing, however, Ansible always flattens variables, including inventory variables, to the host level. If a host is a member of multiple groups, Ansible reads variable values from all of those groups. If you assign different values to the same variable in different groups, Ansible chooses which value to use based on internal rules for merging.</p>
+<h2 is-upgraded>Recap</h2>
+<p>We have seen some basic inventory practices, there is more on this subject and you can look at the official documentation to go further. <a href="https://docs.ansible.com/ansible/latest/user_guide/intro_dynamic_inventory.html" target="_blank">Dynamic inventory</a> or <a href="https://docs.ansible.com/ansible/latest/user_guide/intro_patterns.html" target="_blank">Using patterns for targeting</a></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Intro to playbooks" duration="0">
+        <p>Ansible Playbooks offer a repeatable, re-usable, simple configuration management and multi-machine deployment system, one that is well suited to deploying complex applications. If you need to execute a task with Ansible more than once, write a playbook and put it under source control. Then you can use the playbook to push out new configuration or confirm the configuration of remote systems. The playbooks in the ansible-examples repository illustrate many useful techniques. You may want to look at these in another tab as you read the documentation.</p>
+<p>Playbooks can:</p>
+<ul>
+<li>declare configurations</li>
+<li>orchestrate steps of any manual ordered process, on multiple sets of machines, in a defined order</li>
+<li>launch tasks synchronously or asynchronously</li>
+</ul>
+<h2 is-upgraded>Playbook syntax</h2>
+<p>Playbooks are expressed in YAML format with a minimum of syntax. If you are not familiar with YAML, look at our overview of YAML Syntax and consider installing an add-on for your text editor (see Other Tools and Programs) to help you write clean YAML syntax in your playbooks.</p>
+<p>A playbook is composed of one or more ‘plays&#39; in an ordered list. The terms ‘playbook&#39; and ‘play&#39; are sports analogies. Each play executes part of the overall goal of the playbook, running one or more tasks. Each task calls an Ansible module.</p>
+<h2 is-upgraded>Playbook execution</h2>
+<p>A playbook runs in order from top to bottom. Within each play, tasks also run in order from top to bottom. Playbooks with multiple ‘plays&#39; can orchestrate multi-machine deployments, running one play on your webservers, then another play on your database servers, then a third play on your network infrastructure, and so on. At a minimum, each play defines two things:</p>
+<ul>
+<li>the managed nodes to target, using a pattern</li>
+<li>at least one task to execute</li>
+</ul>
+<p>In this example, the first play targets the web servers; the second play targets the database servers.</p>
+<pre><code language="language-yaml" class="language-yaml">---
+- name: Update web servers
+  hosts: webservers
+  remote_user: root
+
+  tasks:
+  - name: Ensure apache is at the latest version
+    ansible.builtin.yum:
+      name: httpd
+      state: latest
+  - name: Write the apache config file
+    ansible.builtin.template:
+      src: /srv/httpd.j2
+      dest: /etc/httpd.conf
+
+- name: Update db servers
+  hosts: databases
+  remote_user: root
+
+  tasks:
+  - name: Ensure postgresql is at the latest version
+    ansible.builtin.yum:
+      name: postgresql
+      state: latest
+  - name: Ensure that postgresql is started
+    ansible.builtin.service:
+      name: postgresql
+      state: started
+</code></pre>
+<p>Your playbook can include more than just a hosts line and tasks. For example, the playbook above sets a remote_user for each play. This is the user account for the SSH connection. You can add other Playbook Keywords at the playbook, play, or task level to influence how Ansible behaves. Playbook keywords can control the connection plugin, whether to use privilege escalation, how to handle errors, and more. To support a variety of environments, Ansible lets you set many of these parameters as command-line flags, in your Ansible configuration, or in your inventory. Learning the precedence rules for these sources of data will help you as you expand your Ansible ecosystem.</p>
+<h3 is-upgraded>Task execution</h3>
+<p>By default, Ansible executes each task in order, one at a time, against all machines matched by the host pattern. Each task executes a module with specific arguments. When a task has executed on all target machines, Ansible moves on to the next task. You can use strategies to change this default behavior. Within each play, Ansible applies the same task directives to all hosts. If a task fails on a host, Ansible takes that host out of the rotation for the rest of the playbook.</p>
+<p>When you run a playbook, Ansible returns information about connections, the <code>name</code> lines of all your plays and tasks, whether each task has succeeded or failed on each machine, and whether each task has made a change on each machine. At the bottom of the playbook execution, Ansible provides a summary of the nodes that were targeted and how they performed. General failures and fatal &#34;unreachable&#34; communication attempts are kept separate in the counts.</p>
+<h3 is-upgraded>Desired state and ‘idempotency&#39;</h3>
+<p>Most Ansible modules check whether the desired final state has already been achieved, and exit without performing any actions if that state has been achieved, so that repeating the task does not change the final state. Modules that behave this way are often called ‘idempotent.&#39; Whether you run a playbook once, or multiple times, the outcome should be the same. However, not all playbooks and not all modules behave this way. If you are unsure, test your playbooks in a sandbox environment before running them multiple times in production.</p>
+<h3 is-upgraded>Running playbooks</h3>
+<p>To run your playbook, use the <a href="https://docs.ansible.com/ansible/latest/cli/ansible-playbook.html#ansible-playbook" target="_blank">ansible-playbook</a> command.</p>
+<pre><code language="language-bash" class="language-bash">ansible-playbook playbook.yml -f 10
+</code></pre>
+<p>Use the <code>--verbose</code> flag when running your playbook to see detailed output from successful modules as well as unsuccessful ones.</p>
+<h2 is-upgraded>Ansible-Pull</h2>
+<p>Should you want to invert the architecture of Ansible, so that nodes check in to a central location, instead of pushing configuration out to them, you can.</p>
+<p>The <code>ansible-pull</code> is a small script that will checkout a repo of configuration instructions from git, and then run <code>ansible-playbook</code> against that content.</p>
+<p>Assuming you load balance your checkout location, <code>ansible-pull</code> scales essentially infinitely.</p>
+<p>Run <code>ansible-pull --help</code> for details.</p>
+<p>There&#39;s also a clever playbook available to configure <code>ansible-pull</code> via a crontab from push mode.</p>
+<h2 is-upgraded>Verifying playbooks</h2>
+<p>You may want to verify your playbooks to catch syntax errors and other problems before you run them. The ansible-playbook command offers several options for verification, including <code>--check</code>, <code>--diff</code>, <code>--list-hosts</code>, <code>--list-tasks</code>, and <code>--syntax-check</code>.</p>
+<h3 is-upgraded><code>ansible-lint</code></h3>
+<p>You can use <code>ansible-lint</code> for detailed, Ansible-specific feedback on your playbooks before you execute them. For example, if you run ansible-lint on the playbook called verify-apache.yml near the top of this page, you should get the following results:</p>
+<pre><code language="language-bash" class="language-bash">$ ansible-lint verify-apache.yml
+[403] Package installs should not use latest
+verify-apache.yml:8
+Task/Handler: ensure apache is at the latest version
+</code></pre>
+<p>The <a href="https://docs.ansible.com/ansible-lint/rules/default_rules.html" target="_blank">ansible-lint default rules page</a> describes each error. For <code>[403]</code>, the recommended fix is to change <code>state: latest</code> to <code>state: present</code> in the playbook.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Exercice" duration="0">
+        <p>Create a playbook to create a new user and install a <code>nginx</code> server and use it on a VM.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

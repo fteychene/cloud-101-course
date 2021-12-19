@@ -1,0 +1,215 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Getting started with Vagrant</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="getting-started-vagrant"
+                  title="Getting started with Vagrant"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Installation" duration="0">
+        <p>Installation instruction can be found on <a href="https://www.vagrantup.com/downloads.html" target="_blank">this page</a></p>
+<p>You can verify the installation by running the <code>vagrant</code> command.</p>
+<pre><code language="language-bash" class="language-bash">▶ vagrant
+Usage: vagrant [options] &lt;command&gt; [&lt;args&gt;]
+
+    -v, --version                    Print the version and exit.
+    -h, --help                       Print this help.
+
+# ...
+</code></pre>
+<aside class="special"><p> Tip: If you receive an error that Vagrant is not found, try logging out and logging back in to your system (particularly necessary sometimes for Windows). </p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="First VM" duration="0">
+        <h2 is-upgraded>Initialize a Project Directory</h2>
+<p>Make a new directory for the project you will work on throughout these tutorials.</p>
+<pre><code language="language-bash" class="language-bash">▶ mkdir vagrant_getting_started
+</code></pre>
+<p>Move into your new directory.</p>
+<pre><code language="language-bash" class="language-bash">▶ cd vagrant_getting_started
+</code></pre>
+<h2 is-upgraded>Start the vm</h2>
+<p>Let&#39;s start by crate a VM with <code>vagrant</code>.</p>
+<pre><code language="language-bash" class="language-bash">▶ vagrant init ubuntu/focal64
+▶ vagrant up
+</code></pre>
+<p>The Vagrant command will download a <code>box</code> (the vagrant term for an VM image for a provider), create a VM based on this image and start it.<br> In our case it will start a VM based on the <code>Ubuntu Focal (20.04)</code> image.</p>
+<h2 is-upgraded>Connect to the VM</h2>
+<p>Connect to to your running instance with <code>vagrant ssh</code></p>
+<pre><code language="language-bash" class="language-bash">▶ vagrant ssh
+Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-91-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Sun Dec 19 21:01:28 UTC 2021
+
+  System load:  0.75              Processes:               122
+  Usage of /:   3.3% of 38.71GB   Users logged in:         0
+  Memory usage: 21%               IPv4 address for enp0s3: 10.0.2.15
+  Swap usage:   0%
+
+
+1 update can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+
+vagrant@ubuntu-focal:~$
+</code></pre>
+<p>You are now connected to your running VM, you can try to break it for fun.<br> Exit when you are ready to continue.</p>
+<h2 is-upgraded>Stop the VM</h2>
+<p>To destroy the running VM <code>vagrant destroy</code></p>
+<h2 is-upgraded>Recap</h2>
+<p>We have seen that Vagrant can run boxes (a preconfigured images of a VM for a provider), and help us manage the running VM.</p>
+<p>In the rest of this code lab we will see how to configure Vagrant to automaticcaly manage and configure created VMs.</p>
+<aside class="special"><p> In this codelab we will use Virtualbox as VM provider because it&#39;s the most portable one. But many other providers are supported by Vagrant, you can check the list on <a href="https://www.vagrantup.com/docs/providers" target="_blank">the Provider documentation</a></p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Vagrantfile" duration="0">
+        <p>When we ran the <code>vagrant init ubuntu/xenial64</code> command, if you looked closely to the command output, you&#39;ve seen that a <code>Vagrantfile</code> have been created in your current directory.<br> This file is the configuration file of the VM and it&#39;s the information source for the <code>vagrant</code> command.</p>
+<pre><code language="language-ruby" class="language-ruby"># All Vagrant configuration is done below. The &#34;2&#34; in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don&#39;t change it unless you know what
+# you&#39;re doing.
+Vagrant.configure(&#34;2&#34;) do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = &#34;ubuntu/focal64&#34;
+
+  ...
+end
+</code></pre>
+<p>The configuration is heavily documented. I invite you to read the configurations availables and the quick explanation.<br> The documentation is also available <a href="https://docs.vagrantup.com" target="_blank">here</a></p>
+<h2 is-upgraded>Network basics</h2>
+<p>There are a lot of options available in Vargant for configuring Virtual Machines but we will cover only some of them. The first one we&#39;re going to look at are network basics.</p>
+<p>You can define Virtual Machine ip&#39;s as part of a private network using the following configuration :</p>
+<pre><code language="language-ruby" class="language-ruby">config.vm.network :private_network, ip: &#34;192.168.0.2&#34;
+</code></pre>
+<p>This configuraiton will create a VM&#39;s with a defined IP of <code>192.168.0.2</code>. This allow us to create some static private network configuration to expose our VM in to our host tooling easily.</p>
+<p>We could also use prot forwarding.</p>
+<p>Port forwarding allows you to specify ports on the guest machine to share via a port on the host machine. This allows you to access a port on your own machine, but actually have all the network traffic forwarded to a specific port on the guest machine.</p>
+<p>Set up a forwarded port so you can access by exemple an Ngionx in your guest, by adding it to the Vagrantfile under the line you added to run your bootstrap script :</p>
+<pre><code language="language-ruby" class="language-ruby">config.vm.network :forwarded_port, guest: 80, host: 4567
+</code></pre>
+<h2 is-upgraded>Synchronize Local and Guest Files</h2>
+<p>Vagrant automatically syncs files to and from the guest machine. This way you can edit files locally and run them in your virtual development environment.</p>
+<p>By default, Vagrant shares your project directory (the one containing the Vagrantfile) to the <code>/vagrant</code> directory in your guest machine. Synced folders are configured within your Vagrantfile using the <code>config.vm.synced_folder</code> method. Usage of the configuration directive is very simple:</p>
+<pre><code language="language-ruby" class="language-ruby">Vagrant.configure(&#34;2&#34;) do |config|
+  config.vm.synced_folder &#34;src/&#34;, &#34;/srv/website&#34;end
+</code></pre>
+<p>The first parameter is a path to a directory on the host machine. If the path is relative, it is relative to the project root. The second parameter must be an absolute path of where to share the folder within the guest machine. This folder will be created (recursively, if it must) if it does not exist. By default, Vagrant mounts the synced folders with the owner/group set to the SSH user and any parent folders set to root.</p>
+<h2 is-upgraded>Provisioning</h2>
+<p>On the last part on the <code>Vagrantfile</code> there is a section with an interesting part : the provisionning section.<br> Reinstall a VM could be an really easy but boring task to execute on each instanciation.<br> The provisionning part will let you define some tasks to be automatically executed by vagrant on the machine startup.</p>
+<p>Here is one exemple of the configuration based on the <code>shell</code> inline provisionning :</p>
+<pre><code language="language-ruby" class="language-ruby"># Enable provisioning with a shell script. Additional provisioners such as
+# Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
+# documentation for more information about their specific syntax and use.
+config.vm.provision &#34;shell&#34;, inline: &lt;&lt;-SHELL
+  cat &#34;File created by provisioning &gt;&gt; /tmp/witness&#34;
+SHELL
+</code></pre>
+<p>Try this setup by starting the VM and check the created file :</p>
+<pre><code>▶ vagrant up
+▶ vagrant ssh
+...
+vagrant@ubuntu-xenial:~$ cat /tmp/witness
+File created by provisioning
+</code></pre>
+<aside class="special"><p> Another great thing : you can relaunch the provisioning of the VM without recreate it with the command `vagrant up --provision`. </p>
+</aside>
+<h2 is-upgraded>Find More Boxes</h2>
+<p>At this point we only have used a <code>ubuntu/focal64</code> box</p>
+<p>The best place to find more boxes is <a href="https://vagrantcloud.com/boxes/search" target="_blank">HashiCorp&#39;s Vagrant Cloud box catalog</a>. HashiCorp&#39;s Vagrant Cloud has a public directory of freely available boxes that run various platforms and technologies. You can search Vagrant Cloud to find the box you care about.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Exercice" duration="0">
+        <p>Create a <code>Vagrantfile</code> to configure a VM with a fixed ip <code>10.30.0.1</code> and a <code>nginx</code> http server installed on provisionning.<br> You should be able to see the <code>nginx</code> homepage at <code>http://10.30.0.1</code></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Multiple machines" duration="0">
+        <p>You can configure a <code>Vagrantfile</code> for multiples VMs at the same time.</p>
+<p>You need to use the function <code>vm.define</code> is the main VM configuration like the following configuration.</p>
+<pre><code language="language-ruby" class="language-ruby">Vagrant.configure(&#34;2&#34;) do |config|
+  config.vm.provision &#34;shell&#34;, inline: &#34;echo Common provisioning&#34;
+
+  config.vm.define &#34;web&#34; do |web|
+    web.vm.box = &#34;ubuntu/focal64&#34;
+    web.vm.provision &#34;shell&#34;, inline: &#34;echo Provisioning for Web only&#34;
+  end
+
+  config.vm.define &#34;db&#34; do |db|
+    db.vm.box = &#34;ubuntu/focal64&#34;
+    db.vm.provision &#34;shell&#34;, inline: &#34;echo Provisioning for Db only&#34;
+  end
+end
+</code></pre>
+<p>Try to run this configuration.<br> You should see two VMs starting each provisionning the common part and it&#39;s custom part.</p>
+<p>By default, your <code>vagrant ssh</code> will connect to the main vm (the first configured).<br> You can change it with :</p>
+<pre><code language="language-ruby" class="language-ruby">config.vm.define &#34;web&#34;, primary: true do |web|
+  # ...
+end
+</code></pre>
+<p>You can also choose the connection VM with <code>vagrant ssh db</code></p>
+<p>The official documentation can be found <a href="https://www.vagrantup.com/docs/multi-machine/" target="_blank">here</a></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Exercice" duration="0">
+        <p>Create a <code>Vagrantfile</code> to create 2 VMs, one with a <code>mysql</code> service installed and <code>mysql-client</code> tool on the other. Try to connect on the VM with the client and connect to the other VM with the Mysql server.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Congratulations 🎉" duration="0">
+        <p>This was only a getting started with <a href="https://www.vagrantup.com/" target="_blank">Vagrant</a>. You can explore it your self or continue to another codelab.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
